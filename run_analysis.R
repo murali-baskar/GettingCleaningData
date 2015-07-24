@@ -16,65 +16,81 @@ if (!file.exists("UCI HAR Dataset")) {
 file.rename("UCI HAR Dataset","UCI_HAR_Dataset")
 
 #########################################################
-## Step 1a: 
-## Extract the test data using read.table
-## Add the subject and activity labels to the test data
+# Data extraction step for the features and activity data
 #########################################################
+## Extract the features data
+features <- read.table("UCI_HAR_Dataset/features.txt")
+
+## Convert the data frame to character type
+features[,2] <- as.character(features[,2])
+
+## Since the requirement is to find the mean of only the mean and 
+## standard deviation variables find all the column names that 
+## contain the words mean or std
+featuresStdMean <- grep(".*mean.*|.*std.*", features[,2])
+featuresStdMean.names <- features[featuresStdMean,2]
+
+## Format the column names to a readable form
+featuresStdMean.names = gsub('-mean', 'Mean', featuresStdMean.names)
+featuresStdMean.names = gsub('-std', 'Std.Deviation', featuresStdMean.names)
+featuresStdMean.names <- gsub('[-()]', '', featuresStdMean.names)
+
+## Extract the activity labels
+activityLabels <- read.table("UCI_HAR_Dataset/activity_labels.txt")
+
+## Convert the data frame to character type
+activityLabels[,2] <- as.character(activityLabels[,2])
+
+#########################################################
+# Data extraction step for the test data
+#########################################################
+# Creating the data frame as suggested in the Discussion pages of the coursera for this assignment
 testData <- read.table("UCI_HAR_Dataset/test/X_test.txt", nrows=5)
 testData.classes <- lapply(testData, class)
 testData <- read.table("UCI_HAR_Dataset/test/X_test.txt", colClasses=testData.classes)
+
+# Select only the mean and standard deviation variables
+testData <- testData[,featuresStdMean]
+
+# Combine the subjects, activities and the test data
 testActivities <- read.table("UCI_HAR_Dataset/test/Y_test.txt")
 testSubjects <- read.table("UCI_HAR_Dataset/test/subject_test.txt")
 test <- cbind(testSubjects, testActivities, testData)
 
 #########################################################
-## Step 1b: 
-## Extract the train data using read.table
-## Add the subject and activity labels to the train data
+# Data extraction step for the train data
 #########################################################
+
+# Creating the data frame as suggested in the Discussion pages of the coursera for this assignment
 trainData <- read.table("UCI_HAR_Dataset/train/X_train.txt", nrows=5)
 trainData.classes <- lapply(trainData, class)
 trainData <- read.table("UCI_HAR_Dataset/train/X_train.txt", colClasses=trainData.classes)
+
+# Select only the mean and standard deviation variables
+trainData <- trainData[,featuresStdMean]
+
+# Combine the subjects, activities and the train data
 trainActivities <- read.table("UCI_HAR_Dataset/train/Y_train.txt")
 trainSubjects <- read.table("UCI_HAR_Dataset/train/subject_train.txt")
 train <- cbind(trainSubjects, trainActivities, trainData)
 
+#########################################################
+# Merge the data sets test and train
+#########################################################
 mergedData <- rbind(test,train)
 
-#########################################################
-## Step 2 and 3:
-## Load the activity labels and features
-## Extract only the required features (mean and standard deviation)
-## Descriptive activity names to the activities
-#########################################################
-activityLabels <- read.table("UCI_HAR_Dataset/activity_labels.txt")
-activityLabels[,2] <- as.character(activityLabels[,2])
-features <- read.table("UCI_HAR_Dataset/features.txt")
-features[,2] <- as.character(features[,2])
-
-#########################################################
-# Step 4: Label with descriptive variable names
-# Extract only the data on mean and standard deviation
-#########################################################
-featuresStdMean <- grep(".*mean.*|.*std.*", features[,2])
-featuresStdMean.names <- features[featuresStdMean,2]
-featuresStdMean.names = gsub('-mean', 'Mean', featuresStdMean.names)
-featuresStdMean.names = gsub('-std', 'Std.Deviation', featuresStdMean.names)
-featuresStdMean.names <- gsub('[-()]', '', featuresStdMean.names)
-
-# merge datasets and add labels
-allData <- mergedData[,featuresStdMean]
-colnames(allData) <- c("subject", "activity", featuresStdMean.names)
+# Add labels to the merged datasets
+colnames(mergedData) <- c("subject", "activity", featuresStdMean.names)
 
 
 #########################################################
 # Convert activities and subjects to factors
 # Step 5: Tidy data set
 #########################################################
-allData$activity <- factor(allData$activity, levels = activityLabels[,1], labels = activityLabels[,2])
-allData$subject <- as.factor(allData$subject)
+mergedData$activity <- factor(mergedData$activity, levels = activityLabels[,1], labels = activityLabels[,2])
+mergedData$subject <- as.factor(mergedData$subject)
 
-allData.melted <- melt(allData, id = c("subject", "activity"))
-allData.mean <- dcast(allData.melted, subject + activity ~ variable, mean)
+mergedData.melted <- melt(mergedData, id = c("subject", "activity"))
+mergedData.mean <- dcast(mergedData.melted, subject + activity ~ variable, mean)
 
-write.table(allData.mean, "tidy.txt", row.names = FALSE, quote = FALSE)
+write.table(mergedData.mean, "tidy.txt", row.names = FALSE, quote = FALSE)
