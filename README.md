@@ -1,15 +1,5 @@
-# GettingCleaningData
-Coursera project for getting and cleaning data
-## Step 1a: 
-Extract the test data using read.table
-Add the subject and activity labels to the test data
-## Step 1b: 
-Extract the train data using read.table
-Add the subject and activity labels to the train data
-## Step 2 and 3:
-Load the activity labels and features
-Extract only the required features (mean and standard deviation)
-Descriptive activity names to the activities
-# Step 4: Label with descriptive variable names
-Extract only the data on mean and standard deviation
-# Step 5: Tidy data set
+# GettingCleaningData - Coursera project
+1. The inertial data is not considered for this assignment
+2. The test and train data are first filtered for the mean and standard deviation data and then merged for easier processing
+3. Implemented the suggestion made in the discussion pages of this project to use colClasses and extract the test and train data
+4. Referred to online notes for getting help on how to use the melt and dcast functions
